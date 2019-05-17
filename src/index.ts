@@ -23,7 +23,6 @@ export async function runAsAsyncChunks<T>(
     return _.get(chunkOptions, 'transformAfterAll') ? chunkOptions.transformAfterAll(results) : results;
 
     async function runChunk(chunk: any[], results: T[] = []): Promise<T[]> {
-        console.log('running chunk', chunk);
         const funcInput = _.get(chunkOptions, 'transformBefore') ? chunkOptions.transformBefore(chunk) : chunk;
         const result = await func(funcInput);
         const transformedResult = _.get(chunkOptions, 'transformAfterChunk') ? chunkOptions.transformAfterChunk(result) : result;
