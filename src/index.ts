@@ -1,8 +1,10 @@
 import { ChunkData, ErrorHandlingOptions } from './index';
 import * as _ from 'lodash';
-import { O_CREAT } from 'constants';
 
 export interface ChunkOptions {
+    chunkSize: number;
+    parallelAsyncChunks: number;
+
     transformBefore?: (collection: any[]) => any;
     transformAfterChunk?: (result: any) => any;
     transformAfterAll?: (results: any) => any;
@@ -32,14 +34,12 @@ export interface ChunkRequestData extends ChunkData {
 export async function runAsAsyncChunks<T>(
     collection: any[],
     func: (input: any) => Promise<any>,
-    chunkSize: number,
-    parallelAsyncChunks: number,
-    chunkOptions?: ChunkOptions): Promise<T> {
+    chunkOptions: ChunkOptions): Promise<T> {
 
     initDefaultOptions();
 
-    let chunks: ChunkData[] = _.chunk(collection, chunkSize).map(chunk => ({ retryCount: 0, chunk }));
-    const initialChunks = chunks.splice(0, parallelAsyncChunks);
+    let chunks: ChunkData[] = _.chunk(collection, chunkOptions.chunkSize).map(chunk => ({ retryCount: 0, chunk }));
+    const initialChunks = chunks.splice(0, chunkOptions.parallelAsyncChunks);
 
     const results: T[] = _.flatten(await Promise.all(initialChunks.map(async chunk => runChunk(chunk))));
     return chunkOptions.transformAfterAll(results);
@@ -68,8 +68,6 @@ export async function runAsAsyncChunks<T>(
     }
 
     function initDefaultOptions() {
-        if (!chunkOptions) chunkOptions = {};
-        
         chunkOptions.transformBefore = _.get(chunkOptions, 'transformBefore', (collection: any[]) => collection);
         chunkOptions.transformAfterChunk = _.get(chunkOptions, 'transformAfterChunk', ((result: any) => result));
         chunkOptions.transformAfterAll = _.get(chunkOptions, 'transformAfterAll', (results: any) => results);

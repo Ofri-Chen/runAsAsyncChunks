@@ -4,6 +4,8 @@ import * as _ from 'lodash';
 const collection = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 let counter = 0;
 const chunkOpts: ChunkOptions = {
+    chunkSize: 2,
+    parallelAsyncChunks: 3,
     transformBefore: (chunk: number[]) => {
         console.log('running chunk:', chunk);
         return chunk.map(number => number * 2)
@@ -22,7 +24,7 @@ const chunkOpts: ChunkOptions = {
     }
 }
 
-runAsAsyncChunks(collection, someAsyncFunc, 2, 3, chunkOpts)
+runAsAsyncChunks(collection, someAsyncFunc, chunkOpts)
     .then(console.log);
 
 async function someAsyncFunc(numbers: number[]): Promise<number[]> {
