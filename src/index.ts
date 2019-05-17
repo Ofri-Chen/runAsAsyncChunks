@@ -45,11 +45,10 @@ export async function runAsAsyncChunks<T>(
     return chunkOptions.transformAfterAll(results);
 
     async function runChunk(chunkData: ChunkData, results: T[] = []): Promise<T[]> {
-        const funcInput = chunkOptions.transformBefore(chunkData.chunk);
+        const funcInput = chunkOptions.transformBefore(chunkData.chunk);        
+        let result;
         try {
-            const result = await func(funcInput);
-            const transformedResult = chunkOptions.transformAfterChunk(result);
-            results.push(transformedResult);
+            result = await func(funcInput);
         }
         catch (err) {
             await Promise.resolve(chunkOptions.errorHandlingOptions.functionToRun(err, { ...chunkData, data: funcInput }));
@@ -59,6 +58,11 @@ export async function runAsAsyncChunks<T>(
             } else if (chunkOptions.errorHandlingOptions.throwError) {
                 throw err;
             }
+        }
+
+        if(result) {
+            const transformedResult = chunkOptions.transformAfterChunk(result);
+            results.push(transformedResult);
         }
 
         const nextChunk = chunks.shift();
