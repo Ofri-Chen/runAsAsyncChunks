@@ -10,18 +10,19 @@ export interface ChunkOptions {
 * chunks a collection and runs a function asynchronously on each chunk 
 * @return Returns the transformed\raw result of the function for each chunk.
 */
-export async function runAsAsyncChunks<U>(collection: any[],
-                                        func: (input: any) => Promise<any>,
-                                        chunkSize: number,
-                                        parallelAsyncChunks: number,
-                                        chunkOptions: ChunkOptions = {}): Promise<U> {                                            
+export async function runAsAsyncChunks<T>(
+    collection: any[],
+    func: (input: any) => Promise<any>,
+    chunkSize: number,
+    parallelAsyncChunks: number,
+    chunkOptions: ChunkOptions = {}): Promise<T> {
     let chunks: any[][] = _.chunk(collection, chunkSize);
     const initialChunks = chunks.splice(0, parallelAsyncChunks);
 
-    const results: U[] = _.flatten(await Promise.all(initialChunks.map(async chunk => runChunk(func, chunk))));
+    const results: T[] = _.flatten(await Promise.all(initialChunks.map(async chunk => runChunk(chunk))));
     return _.get(chunkOptions, 'transformAfterAll') ? chunkOptions.transformAfterAll(results) : results;
 
-    async function runChunk<T, U>(func: (input: any) => Promise<U>, chunk: T[], results: U[] = []): Promise<U[]> {
+    async function runChunk(chunk: any[], results: T[] = []): Promise<T[]> {
         console.log('running chunk', chunk);
         const funcInput = _.get(chunkOptions, 'transformBefore') ? chunkOptions.transformBefore(chunk) : chunk;
         const result = await func(funcInput);
@@ -29,7 +30,7 @@ export async function runAsAsyncChunks<U>(collection: any[],
         results.push(transformedResult);
 
         const nextChunk = chunks.shift();
-        nextChunk && await runChunk(func, nextChunk, results);
+        nextChunk && await runChunk(nextChunk, results);
 
         return results;
     }
