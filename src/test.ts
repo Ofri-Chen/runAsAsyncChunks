@@ -11,14 +11,17 @@ const chunkOpts: ChunkOptions = {
         return chunk.map(number => number * 2)
     },
     transformAfterChunk: (results: number[]) => {
-        console.log(counter++);
+        // console.log(counter++);
         return results.map(result => result - 1)
     },
     transformAfterAll: (results: number[][]) => _.flatten(results),
     errorHandlingOptions: {
         retries: 3,
-        functionToRun: (err: any, requestData: ChunkRequestData) => {
-            console.log('error -', requestData.chunk);
+        functionToRun: async (err: any, requestData: ChunkRequestData) => {
+            const id = Math.floor(Math.random() * 100 + 1);
+            console.log('error1 -', id);
+            await wait(2000);
+            console.log('error2 -', id);
         },
         throwError: false
     }

@@ -49,14 +49,13 @@ export async function runAsAsyncChunks<T>(
     func: (input: any) => Promise<any>,
     chunkOptions: ChunkOptions): Promise<ChunkResult<T>> {
 
-    initDefaultOptions();
-
-    let chunks: ChunkData[] = _.chunk(collection, chunkOptions.chunkSize).map(chunk => ({
+    initDefaultChunkOptions();
+    const chunks: ChunkData[] = _.chunk(collection, chunkOptions.chunkSize).map(chunk => ({
         retryCount: 0,
         chunk,
         id: chunkOptions.chunkIdGenerator()
     }));
-    let notRetriedErrors: ChunkError[] = [];
+    const notRetriedErrors: ChunkError[] = [];
     const initialChunks = chunks.splice(0, chunkOptions.parallelAsyncChunks);
 
     const results: T[] = _.flatten(await Promise.all(initialChunks.map(async chunk => runChunk(chunk))));
@@ -69,20 +68,11 @@ export async function runAsAsyncChunks<T>(
             result = await func(funcInput);
         }
         catch (error) {
-            await Promise.resolve(chunkOptions.errorHandlingOptions.functionToRun(error, { ...chunkData, data: funcInput }));
-            if (chunkOptions.errorHandlingOptions.retries > chunkData.retryCount) {
-                chunkData.retryCount++;
-                chunks.push(chunkData);
-            } else if (chunkOptions.errorHandlingOptions.throwError) {
-                throw error;
-            } else {
-                notRetriedErrors.push({chunkId: chunkData.id, error});
-            }
+            await handleError(chunkData, funcInput, error);
         }
 
         if (result) {
-            const transformedResult = chunkOptions.transformAfterChunk(result);
-            results.push(transformedResult);
+            results.push(chunkOptions.transformAfterChunk(result));
         }
 
         const nextChunk = chunks.shift();
@@ -91,7 +81,19 @@ export async function runAsAsyncChunks<T>(
         return results;
     }
 
-    function initDefaultOptions() {
+    async function handleError(chunkData: ChunkData, funcInput: any, error: any) {
+        await Promise.resolve(chunkOptions.errorHandlingOptions.functionToRun(error, { ...chunkData, data: funcInput }));
+        if (chunkOptions.errorHandlingOptions.retries > chunkData.retryCount) {
+            chunkData.retryCount++;
+            chunks.push(chunkData);
+        } else if (chunkOptions.errorHandlingOptions.throwError) {
+            throw error;
+        } else {
+            notRetriedErrors.push({ chunkId: chunkData.id, error });
+        }
+    }
+
+    function initDefaultChunkOptions() {
         chunkOptions.transformBefore = _.get(chunkOptions, 'transformBefore', (collection: any[]) => collection);
         chunkOptions.transformAfterChunk = _.get(chunkOptions, 'transformAfterChunk', ((result: any) => result));
         chunkOptions.transformAfterAll = _.get(chunkOptions, 'transformAfterAll', (results: any) => results);
