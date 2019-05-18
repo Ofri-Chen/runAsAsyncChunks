@@ -32,7 +32,9 @@ runAsAsyncChunks(collection, someAsyncFunc, chunkOpts)
 
 async function someAsyncFunc(numbers: number[]): Promise<number[]> {
     await wait(1000);
-    // throw new Error("aaah");
+    if (numbers[0] == 2) {
+        throw new Error("aaah");
+    }
     return numbers.map(num => num ** 2);
 }
 

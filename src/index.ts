@@ -58,7 +58,7 @@ export async function runAsAsyncChunks<T>(
     const notRetriedErrors: ChunkError[] = [];
     const initialChunks = chunks.splice(0, chunkOptions.parallelAsyncChunks);
 
-    const results: T[] = _.flatten(await Promise.all(initialChunks.map(async chunk => runChunk(chunk))));
+    const results: T[] = _.flatten(await Promise.all(initialChunks.map(chunk => runChunk(chunk))));
     return { result: chunkOptions.transformAfterAll(results), notRetriedErrors };
 
     async function runChunk(chunkData: ChunkData, results: T[] = []): Promise<T[]> {
@@ -97,7 +97,7 @@ export async function runAsAsyncChunks<T>(
         chunkOptions.transformBefore = _.get(chunkOptions, 'transformBefore', (collection: any[]) => collection);
         chunkOptions.transformAfterChunk = _.get(chunkOptions, 'transformAfterChunk', ((result: any) => result));
         chunkOptions.transformAfterAll = _.get(chunkOptions, 'transformAfterAll', (results: any) => results);
-        chunkOptions.chunkIdGenerator = _.get(chunkOptions, 'chunkIdGenerator', () => uuid());
+        chunkOptions.chunkIdGenerator = _.get(chunkOptions, 'chunkIdGenerator', uuid);
         chunkOptions.errorHandlingOptions = {
             retries: _.get(chunkOptions, 'errorHandlingOptions.retries', 0),
             throwError: _.get(chunkOptions, 'errorHandlingOptions.throwError', true),
