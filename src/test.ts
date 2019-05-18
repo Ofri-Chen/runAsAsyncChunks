@@ -16,7 +16,7 @@ const chunkOpts: ChunkOptions = {
     },
     transformAfterAll: (results: number[][]) => _.flatten(results),
     errorHandlingOptions: {
-        retryCount: 3,
+        retries: 3,
         functionToRun: (err: any, requestData: ChunkRequestData) => {
             console.log('error -', requestData.chunk);
         },
