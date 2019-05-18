@@ -2,8 +2,6 @@ import { ChunkData, ErrorHandlingOptions } from './index';
 import * as _ from 'lodash';
 import * as uuid from 'node-uuid';
 
-console.log(uuid());
-
 export interface ChunkResult<T> {
     result: T;
     notRetriedErrors: ChunkError[];
